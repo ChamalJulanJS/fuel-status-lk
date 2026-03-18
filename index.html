@@ -114,35 +114,43 @@
     }
 
     // --- මෙන්න ඔයා ඉල්ලපු Location Code එක ---
-    window.getLocation = function() {
-        if (!navigator.geolocation) return alert("Location පහසුකම නැත.");
-        document.getElementById('status-msg').innerText = "ඔබේ නගරය හඳුනාගනිමින් පවතී...";
+window.getLocation = function() {
+    if (!navigator.geolocation) return alert("Location පහසුකම නැත.");
+    document.getElementById('status-msg').innerText = "ඔබේ ස්ථානය පරීක්ෂා කරමින් පවතී...";
 
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-            try {
-                // Reverse Geocoding (GPS වලින් නගරයේ නම සෙවීම)
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
-                const data = await res.json();
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+            const data = await res.json();
+            
+            // ගම, නගරය හෝ ප්‍රාදේශීය ලේකම් කොට්ඨාසය යන ඕනෑම එකක් සලකා බැලීම
+            const addr = data.address;
+            const searchKey = addr.city || addr.town || addr.village || addr.suburb || addr.neighbourhood || addr.county;
+
+            if (searchKey) {
+                document.getElementById('searchInput').value = searchKey;
+                document.getElementById('status-msg').innerText = `ඔබ දැනට ${searchKey} අවට සිටින බව පෙනේ.`;
                 
-                const cityName = data.address.city || data.address.town || data.address.village || data.address.suburb;
+                // සර්ච් එක ක්‍රියාත්මක කිරීම
+                const event = new Event('input');
+                document.getElementById('searchInput').dispatchEvent(event);
 
-                if (cityName) {
-                    document.getElementById('searchInput').value = cityName;
-                    document.getElementById('status-msg').innerText = `ඔබ ${cityName} අසල සිටින බව පෙනේ.`;
-                    
-                    // සර්ච් එක ක්‍රියාත්මක කිරීම
-                    const event = new Event('input');
-                    document.getElementById('searchInput').dispatchEvent(event);
-                }
-            } catch (err) {
-                document.getElementById('status-msg').innerText = "";
-                alert("නගරය හඳුනාගත නොහැකි විය.");
+                // වැදගත්: සෙඩ් කිසිවක් හමු වුණේ නැත්නම් ළඟම තියෙන දිස්ත්‍රික්කය සර්ච් කරන්න
+                setTimeout(() => {
+                    const listDiv = document.getElementById('stationList');
+                    if (listDiv.innerText.includes("හමු වූයේ නැත")) {
+                        const fallBackCity = addr.state_district || addr.province;
+                        document.getElementById('searchInput').value = fallBackCity;
+                        document.getElementById('searchInput').dispatchEvent(new Event('input'));
+                        document.getElementById('status-msg').innerText = `${searchKey} අවට සෙඩ් නැත. ${fallBackCity} අවට සොයමින් පවතී...`;
+                    }
+                }, 1000);
             }
-        }, () => {
-            alert("ස්ථානය ලබා ගැනීමට අවසර දෙන්න.");
-        });
-    }
-
+        } catch (err) {
+            alert("ස්ථානය හඳුනාගත නොහැකි විය.");
+        }
+    });
+}
     window.updateFuelStatus = async function(id, fuelType, status) {
         if(!confirm("ඔබ මෙම තොරතුර තහවුරු කරනවාද?")) return;
         const stationRef = doc(db, "fuel_stations", id);
