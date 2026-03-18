@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fuel Status LK - සෙවුම් පුවරුව</title>
+    <title>Fuel Status LK - නගරය අනුව සෙවීම</title>
     <style>
         :root {
             --primary: #3498db;
@@ -14,17 +14,15 @@
         }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--light); margin: 0; padding: 15px; }
         .container { max-width: 600px; margin: auto; }
-        h1 { text-align: center; color: var(--dark); font-size: 24px; }
+        h1 { text-align: center; color: var(--dark); font-size: 24px; margin-bottom: 20px; }
         
-        /* Search & Location Bar */
         .search-box { width: 100%; padding: 15px; font-size: 16px; border: 2px solid #ddd; border-radius: 25px; margin-bottom: 10px; box-sizing: border-box; outline: none; transition: 0.3s; }
         .search-box:focus { border-color: var(--primary); }
         
-        .loc-btn { width: 100%; padding: 12px; border-radius: 25px; background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; margin-bottom: 20px; transition: 0.2s; }
+        .loc-btn { width: 100%; padding: 14px; border-radius: 25px; background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; margin-bottom: 20px; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .loc-btn:hover { background: #2980b9; }
 
-        /* Station Card */
-        .station-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .station-card { background: white; padding: 18px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .station-info h3 { margin: 0; color: var(--dark); font-size: 18px; }
         .station-info p { margin: 5px 0; color: #666; font-size: 14px; }
         
@@ -35,26 +33,23 @@
         .available { background-color: var(--success); color: white; }
         .unavailable { background-color: var(--danger); color: white; }
 
-        /* Buttons */
         .btn-group { display: flex; gap: 5px; }
-        .btn { border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
-        .btn-yes { background-color: #e8f5e9; color: var(--success); border: 1px solid var(--success); }
-        .btn-no { background-color: #ffebee; color: var(--danger); border: 1px solid var(--danger); }
-        .btn:active { transform: scale(0.95); }
+        .btn { border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; }
+        .btn-yes { background: #e8f5e9; color: var(--success); border: 1px solid var(--success); }
+        .btn-no { background: #ffebee; color: var(--danger); border: 1px solid var(--danger); }
         
-        #loading { text-align: center; color: var(--primary); font-weight: bold; }
+        #status-msg { text-align: center; color: var(--primary); font-weight: bold; margin-bottom: 15px; min-height: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>⛽ Fuel Status LK</h1>
-    <input type="text" id="searchInput" class="search-box" placeholder="සෙඩ් එකේ නම හෝ නගරය ටයිප් කරන්න...">
-    <button class="loc-btn" onclick="getLocation()">📍 මගේ නගරය සොයන්න</button>
+    <input type="text" id="searchInput" class="search-box" placeholder="සෙඩ් එකේ නම හෝ නගරය සර්ච් කරන්න...">
+    <button class="loc-btn" onclick="getLocation()">📍 මගේ නගරය අනුව සොයන්න</button>
     
-    <div id="stationList">
-        <p id="loading">දත්ත පූරණය වෙමින් පවතී...</p>
-    </div>
+    <div id="status-msg">දත්ත පූරණය වෙමින් පවතී...</div>
+    <div id="stationList"></div>
 </div>
 
 <script type="module">
@@ -74,21 +69,21 @@
     const db = getFirestore(app);
     let allStations = [];
 
-    // මුළු දත්ත ලබා ගැනීම
     async function fetchAllData() {
         try {
             const querySnapshot = await getDocs(collection(db, "fuel_stations"));
             allStations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            document.getElementById('status-msg').innerText = "";
             displayStations(allStations.slice(0, 20));
         } catch (error) {
-            document.getElementById('stationList').innerHTML = "දෝෂයකි: " + error.message;
+            document.getElementById('status-msg').innerText = "Error: " + error.message;
         }
     }
 
     function displayStations(list) {
         const listDiv = document.getElementById('stationList');
         if(list.length === 0) {
-            listDiv.innerHTML = "<p style='text-align:center;'>සෙඩ් කිසිවක් හමු වූයේ නැත.</p>";
+            listDiv.innerHTML = "<p style='text-align:center;'>සෙඩ් හමු වූයේ නැත.</p>";
             return;
         }
 
@@ -118,56 +113,51 @@
         `).join('');
     }
 
-    // දත්ත Update කිරීම
+    // --- මෙන්න ඔයා ඉල්ලපු Location Code එක ---
+    window.getLocation = function() {
+        if (!navigator.geolocation) return alert("Location පහසුකම නැත.");
+        document.getElementById('status-msg').innerText = "ඔබේ නගරය හඳුනාගනිමින් පවතී...";
+
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            try {
+                // Reverse Geocoding (GPS වලින් නගරයේ නම සෙවීම)
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                const data = await res.json();
+                
+                const cityName = data.address.city || data.address.town || data.address.village || data.address.suburb;
+
+                if (cityName) {
+                    document.getElementById('searchInput').value = cityName;
+                    document.getElementById('status-msg').innerText = `ඔබ ${cityName} අසල සිටින බව පෙනේ.`;
+                    
+                    // සර්ච් එක ක්‍රියාත්මක කිරීම
+                    const event = new Event('input');
+                    document.getElementById('searchInput').dispatchEvent(event);
+                }
+            } catch (err) {
+                document.getElementById('status-msg').innerText = "";
+                alert("නගරය හඳුනාගත නොහැකි විය.");
+            }
+        }, () => {
+            alert("ස්ථානය ලබා ගැනීමට අවසර දෙන්න.");
+        });
+    }
+
     window.updateFuelStatus = async function(id, fuelType, status) {
         if(!confirm("ඔබ මෙම තොරතුර තහවුරු කරනවාද?")) return;
         const stationRef = doc(db, "fuel_stations", id);
         try {
-            await updateDoc(stationRef, {
-                [fuelType]: status,
-                lastUpdated: new Date()
-            });
-            
-            // Local Update
-            const index = allStations.findIndex(s => s.id === id);
-            if (index !== -1) allStations[index][fuelType] = status;
-            
-            // දැනට තියෙන search එකට අනුව ආපහු පෙන්වන්න
-            const term = document.getElementById('searchInput').value.toLowerCase();
-            const toShow = term ? allStations.filter(s => (s.name||"").toLowerCase().includes(term) || (s.location||"").toLowerCase().includes(term)) : allStations.slice(0, 20);
-            displayStations(toShow);
-            
-            alert("තොරතුර යාවත්කාලීන විය!");
-        } catch (e) {
-            alert("අවසර නැත! Firebase Rules පරීක්ෂා කරන්න.");
-        }
+            await updateDoc(stationRef, { [fuelType]: status, lastUpdated: new Date() });
+            alert("යාවත්කාලීන විය!");
+            fetchAllData(); 
+        } catch (e) { alert("Error!"); }
     }
 
-    // Search Logic
     document.getElementById('searchInput').addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
-        const filtered = allStations.filter(s => 
-            (s.name || "").toLowerCase().includes(term) || 
-            (s.location || "").toLowerCase().includes(term)
-        );
+        const filtered = allStations.filter(s => (s.name || "").toLowerCase().includes(term) || (s.location || "").toLowerCase().includes(term));
         displayStations(term === "" ? allStations.slice(0, 20) : filtered);
     });
-
-    // Location Logic
-    window.getLocation = function() {
-        if (!navigator.geolocation) return alert("Geolocation සහාය දක්වන්නේ නැත.");
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
-                const data = await res.json();
-                const city = data.address.city || data.address.town || data.address.village || data.address.suburb;
-                if (city) {
-                    document.getElementById('searchInput').value = city;
-                    document.getElementById('searchInput').dispatchEvent(new Event('input'));
-                }
-            } catch (err) { alert("නගරය හඳුනාගත නොහැකි විය."); }
-        });
-    }
 
     fetchAllData();
 </script>
