@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Status LK - සෙවුම් පුවරුව</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --dark: #2c3e50;
+            --light: #f4f7f6;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--light); margin: 0; padding: 15px; }
+        .container { max-width: 600px; margin: auto; }
+        h1 { text-align: center; color: var(--dark); font-size: 24px; }
+        
+        /* Search & Location Bar */
+        .search-box { width: 100%; padding: 15px; font-size: 16px; border: 2px solid #ddd; border-radius: 25px; margin-bottom: 10px; box-sizing: border-box; outline: none; transition: 0.3s; }
+        .search-box:focus { border-color: var(--primary); }
+        
+        .loc-btn { width: 100%; padding: 12px; border-radius: 25px; background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; margin-bottom: 20px; transition: 0.2s; }
+        .loc-btn:hover { background: #2980b9; }
+
+        /* Station Card */
+        .station-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .station-info h3 { margin: 0; color: var(--dark); font-size: 18px; }
+        .station-info p { margin: 5px 0; color: #666; font-size: 14px; }
+        
+        .status-row { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; }
+        .fuel-type { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 48%; }
+        
+        .status-badge { padding: 5px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; width: 70px; text-align: center; }
+        .available { background-color: var(--success); color: white; }
+        .unavailable { background-color: var(--danger); color: white; }
+
+        /* Buttons */
+        .btn-group { display: flex; gap: 5px; }
+        .btn { border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .btn-yes { background-color: #e8f5e9; color: var(--success); border: 1px solid var(--success); }
+        .btn-no { background-color: #ffebee; color: var(--danger); border: 1px solid var(--danger); }
+        .btn:active { transform: scale(0.95); }
+        
+        #loading { text-align: center; color: var(--primary); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⛽ Fuel Status LK</h1>
+    <input type="text" id="searchInput" class="search-box" placeholder="සෙඩ් එකේ නම හෝ නගරය ටයිප් කරන්න...">
+    <button class="loc-btn" onclick="getLocation()">📍 මගේ නගරය සොයන්න</button>
+    
+    <div id="stationList">
+        <p id="loading">දත්ත පූරණය වෙමින් පවතී...</p>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD_m49w7qdX0e-Jt6fZYh91_QAMQOmoWfU",
+        authDomain: "fuel-portal-lk.firebaseapp.com",
+        projectId: "fuel-portal-lk",
+        storageBucket: "fuel-portal-lk.firebasestorage.app",
+        messagingSenderId: "42488896193",
+        appId: "1:42488896193:web:dec2dd13504d03b8691240"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let allStations = [];
+
+    // මුළු දත්ත ලබා ගැනීම
+    async function fetchAllData() {
+        try {
+            const querySnapshot = await getDocs(collection(db, "fuel_stations"));
+            allStations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            displayStations(allStations.slice(0, 20));
+        } catch (error) {
+            document.getElementById('stationList').innerHTML = "දෝෂයකි: " + error.message;
+        }
+    }
+
+    function displayStations(list) {
+        const listDiv = document.getElementById('stationList');
+        if(list.length === 0) {
+            listDiv.innerHTML = "<p style='text-align:center;'>සෙඩ් කිසිවක් හමු වූයේ නැත.</p>";
+            return;
+        }
+
+        listDiv.innerHTML = list.map(s => `
+            <div class="station-card">
+                <div class="station-info">
+                    <h3>${s.name || 'නමක් නැත'}</h3>
+                    <p>📍 ${s.location || 'ලිපිනය නැත'} (${s.id})</p>
+                </div>
+                <div class="status-row">
+                    <div class="fuel-type">
+                        <span class="status-badge ${s.petrol ? 'available' : 'unavailable'}">PETROL</span>
+                        <div class="btn-group">
+                            <button class="btn btn-yes" onclick="updateFuelStatus('${s.id}', 'petrol', true)">✔</button>
+                            <button class="btn btn-no" onclick="updateFuelStatus('${s.id}', 'petrol', false)">✖</button>
+                        </div>
+                    </div>
+                    <div class="fuel-type">
+                        <span class="status-badge ${s.diesel ? 'available' : 'unavailable'}">DIESEL</span>
+                        <div class="btn-group">
+                            <button class="btn btn-yes" onclick="updateFuelStatus('${s.id}', 'diesel', true)">✔</button>
+                            <button class="btn btn-no" onclick="updateFuelStatus('${s.id}', 'diesel', false)">✖</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // දත්ත Update කිරීම
+    window.updateFuelStatus = async function(id, fuelType, status) {
+        if(!confirm("ඔබ මෙම තොරතුර තහවුරු කරනවාද?")) return;
+        const stationRef = doc(db, "fuel_stations", id);
+        try {
+            await updateDoc(stationRef, {
+                [fuelType]: status,
+                lastUpdated: new Date()
+            });
+            
+            // Local Update
+            const index = allStations.findIndex(s => s.id === id);
+            if (index !== -1) allStations[index][fuelType] = status;
+            
+            // දැනට තියෙන search එකට අනුව ආපහු පෙන්වන්න
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const toShow = term ? allStations.filter(s => (s.name||"").toLowerCase().includes(term) || (s.location||"").toLowerCase().includes(term)) : allStations.slice(0, 20);
+            displayStations(toShow);
+            
+            alert("තොරතුර යාවත්කාලීන විය!");
+        } catch (e) {
+            alert("අවසර නැත! Firebase Rules පරීක්ෂා කරන්න.");
+        }
+    }
+
+    // Search Logic
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = allStations.filter(s => 
+            (s.name || "").toLowerCase().includes(term) || 
+            (s.location || "").toLowerCase().includes(term)
+        );
+        displayStations(term === "" ? allStations.slice(0, 20) : filtered);
+    });
+
+    // Location Logic
+    window.getLocation = function() {
+        if (!navigator.geolocation) return alert("Geolocation සහාය දක්වන්නේ නැත.");
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                const data = await res.json();
+                const city = data.address.city || data.address.town || data.address.village || data.address.suburb;
+                if (city) {
+                    document.getElementById('searchInput').value = city;
+                    document.getElementById('searchInput').dispatchEvent(new Event('input'));
+                }
+            } catch (err) { alert("නගරය හඳුනාගත නොහැකි විය."); }
+        });
+    }
+
+    fetchAllData();
+</script>
+
+</body>
+</html>
