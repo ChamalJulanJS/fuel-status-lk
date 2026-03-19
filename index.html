@@ -3,41 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fuel Status LK - නගරය අනුව සෙවීම</title>
+    <title>Fuel Status LK - ළඟම සෙඩ් සොයන්න</title>
     <style>
-        :root {
-            --primary: #3498db;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --dark: #2c3e50;
-            --light: #f4f7f6;
-        }
+        :root { --primary: #3498db; --success: #2ecc71; --danger: #e74c3c; --dark: #2c3e50; --light: #f4f7f6; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--light); margin: 0; padding: 15px; }
         .container { max-width: 600px; margin: auto; }
         h1 { text-align: center; color: var(--dark); font-size: 24px; margin-bottom: 20px; }
-        
         .search-box { width: 100%; padding: 15px; font-size: 16px; border: 2px solid #ddd; border-radius: 25px; margin-bottom: 10px; box-sizing: border-box; outline: none; transition: 0.3s; }
         .search-box:focus { border-color: var(--primary); }
-        
-        .loc-btn { width: 100%; padding: 14px; border-radius: 25px; background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; margin-bottom: 20px; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .loc-btn { width: 100%; padding: 14px; border-radius: 25px; background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 16px; }
         .loc-btn:hover { background: #2980b9; }
-
         .station-card { background: white; padding: 18px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .station-info h3 { margin: 0; color: var(--dark); font-size: 18px; }
         .station-info p { margin: 5px 0; color: #666; font-size: 14px; }
-        
         .status-row { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; }
         .fuel-type { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 48%; }
-        
         .status-badge { padding: 5px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; width: 70px; text-align: center; }
         .available { background-color: var(--success); color: white; }
         .unavailable { background-color: var(--danger); color: white; }
-
         .btn-group { display: flex; gap: 5px; }
         .btn { border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; }
         .btn-yes { background: #e8f5e9; color: var(--success); border: 1px solid var(--success); }
         .btn-no { background: #ffebee; color: var(--danger); border: 1px solid var(--danger); }
-        
         #status-msg { text-align: center; color: var(--primary); font-weight: bold; margin-bottom: 15px; min-height: 20px; }
     </style>
 </head>
@@ -47,7 +34,6 @@
     <h1>⛽ Fuel Status LK</h1>
     <input type="text" id="searchInput" class="search-box" placeholder="සෙඩ් එකේ නම හෝ නගරය සර්ච් කරන්න...">
     <button class="loc-btn" onclick="getLocation()">📍 මගේ නගරය අනුව සොයන්න</button>
-    
     <div id="status-msg">දත්ත පූරණය වෙමින් පවතී...</div>
     <div id="stationList"></div>
 </div>
@@ -113,44 +99,36 @@
         `).join('');
     }
 
-    // --- මෙන්න ඔයා ඉල්ලපු Location Code එක ---
-window.getLocation = function() {
-    if (!navigator.geolocation) return alert("Location පහසුකම නැත.");
-    document.getElementById('status-msg').innerText = "ඔබේ ස්ථානය පරීක්ෂා කරමින් පවතී...";
+    // 📍 ලොකේෂන් එකෙන් නගරය හොයාගෙන සර්ච් කිරීම
+    window.getLocation = function() {
+        if (!navigator.geolocation) return alert("Location පහසුකම නැත.");
+        document.getElementById('status-msg').innerText = "ඔබේ ස්ථානය පරීක්ෂා කරමින් පවතී...";
 
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
-            const data = await res.json();
-            
-            // ගම, නගරය හෝ ප්‍රාදේශීය ලේකම් කොට්ඨාසය යන ඕනෑම එකක් සලකා බැලීම
-            const addr = data.address;
-            const searchKey = addr.city || addr.town || addr.village || addr.suburb || addr.neighbourhood || addr.county;
-
-            if (searchKey) {
-                document.getElementById('searchInput').value = searchKey;
-                document.getElementById('status-msg').innerText = `ඔබ දැනට ${searchKey} අවට සිටින බව පෙනේ.`;
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                const data = await res.json();
                 
-                // සර්ච් එක ක්‍රියාත්මක කිරීම
-                const event = new Event('input');
-                document.getElementById('searchInput').dispatchEvent(event);
+                // නගරය, ගම හෝ දිස්ත්‍රික්කය ලබාගැනීම
+                const addr = data.address;
+                const searchKey = addr.city || addr.town || addr.village || addr.suburb || addr.neighbourhood || addr.county || addr.state_district;
 
-                // වැදගත්: සෙඩ් කිසිවක් හමු වුණේ නැත්නම් ළඟම තියෙන දිස්ත්‍රික්කය සර්ච් කරන්න
-                setTimeout(() => {
-                    const listDiv = document.getElementById('stationList');
-                    if (listDiv.innerText.includes("හමු වූයේ නැත")) {
-                        const fallBackCity = addr.state_district || addr.province;
-                        document.getElementById('searchInput').value = fallBackCity;
-                        document.getElementById('searchInput').dispatchEvent(new Event('input'));
-                        document.getElementById('status-msg').innerText = `${searchKey} අවට සෙඩ් නැත. ${fallBackCity} අවට සොයමින් පවතී...`;
-                    }
-                }, 1000);
+                if (searchKey) {
+                    document.getElementById('searchInput').value = searchKey;
+                    document.getElementById('status-msg').innerText = `ඔබ ${searchKey} අවට සිටින බව පෙනේ.`;
+                    
+                    const event = new Event('input');
+                    document.getElementById('searchInput').dispatchEvent(event);
+                }
+            } catch (err) {
+                document.getElementById('status-msg').innerText = "";
+                alert("ස්ථානය හඳුනාගත නොහැකි විය.");
             }
-        } catch (err) {
-            alert("ස්ථානය හඳුනාගත නොහැකි විය.");
-        }
-    });
-}
+        }, () => {
+            alert("ස්ථානය ලබා ගැනීමට අවසර දෙන්න.");
+        });
+    }
+
     window.updateFuelStatus = async function(id, fuelType, status) {
         if(!confirm("ඔබ මෙම තොරතුර තහවුරු කරනවාද?")) return;
         const stationRef = doc(db, "fuel_stations", id);
