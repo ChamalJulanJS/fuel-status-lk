@@ -44,7 +44,8 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    // getDocs වෙනුවට getDoc සහ setDoc ගෙන ඇත
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD_m49w7qdX0e-Jt6fZYh91_QAMQOmoWfU",
@@ -57,46 +58,49 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    let allStations = [];
+    let allStations = []; // JSON එකෙන් එන දත්ත
 
-    // --- පෘථිවියේ අක්ෂාංශ දේශාංශ අනුව දුර මනින ගණිත සූත්‍රය ---
-    function getDistance(lat1, lon1, lat2, lon2) {
-        if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity; // GPS දත්ත නැති සෙඩ් අත්හැරීම
-        const R = 6371; // පෘථිවියේ අරය කිලෝමීටර් වලින්
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c; // දුර කිලෝමීටර් වලින්
-    }
-
-    async function fetchAllData() {
+    // --- 1. JSON ගොනුවෙන් දත්ත ගැනීම (Free & Unlimited) ---
+    async function loadStaticData() {
         try {
-            const querySnapshot = await getDocs(collection(db, "fuel_stations"));
-            allStations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const res = await fetch('fuel_stations_v3_gps.json');
+            allStations = await res.json();
             document.getElementById('status-msg').innerText = "";
-            displayStations(allStations.slice(0, 20));
+            showResults(allStations.slice(0, 20)); // මුල් 20 පෙන්වීම
         } catch (error) {
-            document.getElementById('status-msg').innerText = "Error: " + error.message;
+            document.getElementById('status-msg').innerText = "දත්ත ලබාගැනීමේ දෝෂයකි. JSON ෆයිල් එක පරීක්ෂා කරන්න.";
         }
     }
 
-    // සෙඩ් ලැයිස්තුව පෙන්වන කොටස (isNearest = true නම් ලස්සනට පෙන්වයි)
-    function displayStations(list, isNearest = false) {
+    // --- 2. තිරයේ පෙන්වන සෙඩ් වලට පමණක් Firebase එකෙන් තෙල් තත්ත්වය ඇසීම ---
+    async function showResults(list, isNearest = false) {
         const listDiv = document.getElementById('stationList');
         if(list.length === 0) {
             listDiv.innerHTML = "<p style='text-align:center;'>සෙඩ් හමු වූයේ නැත.</p>";
             return;
         }
 
-        listDiv.innerHTML = list.map((s, index) => `
+        listDiv.innerHTML = "<p style='text-align:center; color:#666;'>තත්ත්වය පරීක්ෂා කරමින්...</p>";
+
+        // පෙන්වන සෙඩ් (උදා: 3ක් හෝ 20ක්) පමණක් Firebase එකෙන් අදිනවා
+        const mergedList = await Promise.all(list.map(async (s) => {
+            try {
+                const docRef = doc(db, "fuel_stations", s.id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    return { ...s, petrol: data.petrol, diesel: data.diesel };
+                }
+            } catch (e) { console.error("Firebase read error"); }
+            return { ...s, petrol: false, diesel: false }; // දත්ත නැත්නම් False
+        }));
+
+        listDiv.innerHTML = mergedList.map((s, index) => `
             <div class="station-card ${isNearest ? 'nearest-card' : ''}">
                 <div class="station-info">
                     <h3>${isNearest ? `#${index + 1} ` : ''}${s.name || 'නමක් නැත'}</h3>
                     <p>📍 ${s.location || 'ලිපිනය නැත'}</p>
-                    ${s.distance && s.distance !== Infinity ? `<span class="dist-tag">🚩 ඔබේ සිට දුර: ${s.distance.toFixed(2)} km</span>` : ''}
+                    ${s.distance && s.distance !== Infinity ? `<span class="dist-tag">🚩 ඔබේ සිට: ${s.distance.toFixed(2)} km</span>` : ''}
                 </div>
                 <div class="status-row">
                     <div class="fuel-type">
@@ -118,65 +122,60 @@
         `).join('');
     }
 
-    // --- 📍 ළඟම සෙඩ් 3 හොයන ප්‍රධාන Function එක ---
+    // --- 3. දුර ගණනය කිරීම ---
+    function getDistance(lat1, lon1, lat2, lon2) {
+        if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity; 
+        const R = 6371; 
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))); 
+    }
+
+    // --- 4. ළඟම සෙඩ් සෙවීම ---
     window.findNearestStations = function() {
         if (!navigator.geolocation) return alert("Location පහසුකම නැත.");
-        
-        // සර්ච් බොක්ස් එක හිස් කරනවා පටලවා නොගන්න
         document.getElementById('searchInput').value = ''; 
-        document.getElementById('status-msg').innerText = "ඔබගේ ස්ථානය පරීක්ෂා කරමින්... කරුණාකර රැඳී සිටින්න.";
+        document.getElementById('status-msg').innerText = "ඔබගේ ස්ථානය පරීක්ෂා කරමින්...";
 
         navigator.geolocation.getCurrentPosition((pos) => {
             const userLat = pos.coords.latitude;
             const userLon = pos.coords.longitude;
 
-            // 1. හැම සෙඩ් එකකටම දුර මනිනවා
             const stationsWithDistance = allStations.map(s => {
-                // Firebase එකේ latitude, longitude තියෙනවද බලනවා
-                const dist = getDistance(userLat, userLon, s.latitude, s.longitude);
-                return { ...s, distance: dist };
-            });
+                return { ...s, distance: getDistance(userLat, userLon, s.latitude, s.longitude) };
+            }).sort((a, b) => a.distance - b.distance);
 
-            // 2. දුර අඩුවෙන් තියෙන ඒවා උඩට එන්න Sort කරනවා
-            stationsWithDistance.sort((a, b) => a.distance - b.distance);
-
-            // 3. ළඟම තියෙන 3 විතරක් ගන්නවා
-            const nearest3 = stationsWithDistance.slice(0, 3);
-            
             document.getElementById('status-msg').innerText = "ඔබට ළඟම සෙඩ් 3 මෙන්න!";
-            
-            // 4. ඒ 3 ලස්සනට පෙන්වනවා
-            displayStations(nearest3, true);
-
-        }, (err) => {
-            document.getElementById('status-msg').innerText = "";
-            alert("ස්ථානය ලබා ගැනීමට අවසර දෙන්න.");
-        });
+            showResults(stationsWithDistance.slice(0, 3), true);
+        }, () => alert("ස්ථානය ලබා ගැනීමට අවසර දෙන්න."));
     }
 
-    // දත්ත යාවත්කාලීන කිරීම (Update Status)
+    // --- 5. තෙල් තත්ත්වය යාවත්කාලීන කිරීම ---
     window.updateFuelStatus = async function(id, fuelType, status) {
         if(!confirm("ඔබ මෙම තොරතුර තහවුරු කරනවාද?")) return;
         const stationRef = doc(db, "fuel_stations", id);
         try {
-            await updateDoc(stationRef, { [fuelType]: status, lastUpdated: new Date() });
+            // merge: true යෙදීමෙන් අලුතින්ම doc එකක් වුණත් හැදේ
+            await setDoc(stationRef, { [fuelType]: status, lastUpdated: new Date() }, { merge: true });
             alert("යාවත්කාලීන විය!");
-            fetchAllData(); 
-        } catch (e) { alert("Error!"); }
+            // Update වුණාම තිබුණු තැනම refresh වෙන්න
+            document.getElementById('searchInput').dispatchEvent(new Event('input'));
+        } catch (e) { alert("Error: Quota ඉවර වෙලා හෝ අවසර නැත!"); }
     }
 
-    // සාමාන්‍ය සෙවුම (Search Box)
+    // --- 6. සෙවුම් තීරුව ---
     document.getElementById('searchInput').addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         if(term === "") {
-            displayStations(allStations.slice(0, 20));
+            showResults(allStations.slice(0, 20));
             return;
         }
         const filtered = allStations.filter(s => (s.name || "").toLowerCase().includes(term) || (s.location || "").toLowerCase().includes(term));
-        displayStations(filtered);
+        showResults(filtered.slice(0, 20)); // සෙවුමේත් මුල් 20 පමණක් යවමු (Limit reads)
     });
 
-    fetchAllData();
+    loadStaticData();
 </script>
 
 </body>
