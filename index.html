@@ -26,14 +26,14 @@
             --text-muted: #aaaaaa;
             --border-color: #333333;
             --meta-bg: #2d2d2d;
-            --primary: #2980b9; /* Dark mode එකට ගැලපෙන නිල් පාට */
+            --primary: #2980b9; 
         }
 
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 15px; transition: background-color 0.3s, color 0.3s; }
         .container { max-width: 600px; margin: auto; position: relative; }
         h1 { text-align: center; color: var(--text-main); font-size: 24px; margin-bottom: 20px; transition: color 0.3s; }
         
-        /* 🌗 Theme Toggle Button */
+        /* Theme Toggle Button */
         .theme-btn { position: absolute; top: 0; right: 0; background: var(--card-bg); color: var(--text-main); border: 2px solid var(--border-color); padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .theme-btn:hover { border-color: var(--primary); }
 
@@ -57,12 +57,13 @@
         .meta-info { margin-top: 20px; font-size: 13px; color: var(--text-muted); text-align: center; background: var(--meta-bg); padding: 10px; border-radius: 8px; transition: background 0.3s, color 0.3s; }
         #status-msg { text-align: center; color: var(--primary); font-weight: bold; margin-bottom: 15px; }
 
+        /* Responsive Design (Mobile) */
         @media (max-width: 480px) {
             .status-row { flex-direction: column; gap: 20px; }
             .fuel-type { width: 100%; padding-bottom: 15px; border-bottom: 1px dashed var(--border-color); }
             .fuel-type:last-child { border-bottom: none; padding-bottom: 0; }
             .btn { font-size: 15px; padding: 12px 10px; }
-            .theme-btn { position: relative; display: table; margin: 0 auto 15px auto; } /* ෆෝන් එකේදී බොත්තම මැදට ගෙන එයි */
+            .theme-btn { position: relative; display: table; margin: 0 auto 15px auto; } 
         }
     </style>
 </head>
@@ -79,17 +80,17 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // 🌗 Theme Toggle Logic
+    // ==========================================
+    // 🌗 Dark Mode / Light Mode Logic
+    // ==========================================
     const themeBtn = document.getElementById('themeToggle');
     const savedTheme = localStorage.getItem('theme') || 'light';
 
-    // සයිට් එක ලෝඩ් වෙද්දී කලින් සේව් කරපු Theme එක දානවා
     if (savedTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
         themeBtn.innerText = '☀️ Light Mode';
     }
 
-    // බොත්තම එබුවම Theme එක මාරු කරනවා
     themeBtn.addEventListener('click', () => {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         if (currentTheme === 'dark') {
@@ -103,6 +104,9 @@
         }
     });
 
+    // ==========================================
+    // 🔥 Firebase Setup
+    // ==========================================
     const firebaseConfig = {
         apiKey: "AIzaSyD_m49w7qdX0e-Jt6fZYh91_QAMQOmoWfU",
         authDomain: "fuel-portal-lk.firebaseapp.com",
@@ -117,6 +121,9 @@
     let myStation = null;
     let userLat = null, userLon = null;
 
+    // ==========================================
+    // 📍 දුර මැනීම සහ දත්ත සැකසීම
+    // ==========================================
     function getDistance(lat1, lon1, lat2, lon2) {
         if (!lat1 || !lon1 || !lat2 || !lon2) return null; 
         const R = 6371; 
@@ -143,6 +150,9 @@
         });
     }
 
+    // ==========================================
+    // 🚀 ප්‍රධාන වැඩසටහන
+    // ==========================================
     async function initApp() {
         try {
             const res = await fetch('fuel_stations_v3_gps.json');
@@ -245,7 +255,60 @@
         }
     }
 
+    // ==========================================
+    // 🔔 Notification පද්ධතිය (9 AM, 12 PM, 3 PM, 6 PM)
+    // ==========================================
+    let lastNotifiedHour = -1; 
+
+    function requestNotificationPermission() {
+        if ("Notification" in window) {
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        console.log("🔔 Notification යැවීමට අවසර ලැබුණා!");
+                    }
+                });
+            }
+        }
+    }
+
+    function sendPushNotification() {
+        if ("Notification" in window && Notification.permission === "granted") {
+            const options = {
+                body: "දැන් සෙඩ් එකේ පෙට්‍රල්/ඩීසල් තියෙනවද? කරුණාකර තත්ත්වය යාවත්කාලීන කරන්න! ⛽",
+                icon: "https://cdn-icons-png.flaticon.com/512/3204/3204073.png", 
+                vibrate: [200, 100, 200] 
+            };
+            
+            const notification = new Notification("Fuel Status LK", options);
+            notification.onclick = function() {
+                window.focus();
+                notification.close();
+            };
+        }
+    }
+
+    function checkTimeForNotification() {
+        const now = new Date();
+        const currentHour = now.getHours(); 
+        
+        // උදේ 9, දවල් 12, හවස 3 (15), හවස 6 (18)
+        const targetHours = [9, 12, 15, 18];
+
+        if (targetHours.includes(currentHour) && lastNotifiedHour !== currentHour) {
+            sendPushNotification();
+            lastNotifiedHour = currentHour; 
+        }
+    }
+
+    // වැඩසටහන ආරම්භ කිරීම
     initApp();
+    requestNotificationPermission();
+    setInterval(checkTimeForNotification, 60000); 
+
+    // 💡 ටෙස්ට් කිරීමට අවශ්‍ය නම් පහත පේළියේ // මකා දමන්න.
+    setTimeout(sendPushNotification, 4000);
+
 </script>
 
 </body>
