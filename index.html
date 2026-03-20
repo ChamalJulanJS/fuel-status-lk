@@ -11,72 +11,50 @@
       OneSignalDeferred.push(async function(OneSignal) {
         await OneSignal.init({
           appId: "b36bb97b-1cbc-4fde-89c4-8e5f069ad68d",
-          notifyButton: {
-            enable: true, // සීනුව අයිකන් එක පෙන්වන්න
-          },
+          notifyButton: { enable: true },
         });
       });
     </script>
 
     <style>
-        /* ☀️ Day Mode (පෙරනිමි වර්ණ) */
         :root { 
-            --primary: #3498db; 
-            --success: #2ecc71; 
-            --danger: #e74c3c; 
-            --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
-            --text-main: #2c3e50;
-            --text-muted: #666666;
-            --border-color: #eeeeee;
-            --meta-bg: #f8f9fa;
+            --primary: #3498db; --success: #2ecc71; --danger: #e74c3c; 
+            --bg-color: #f4f7f6; --card-bg: #ffffff; --text-main: #2c3e50;
+            --text-muted: #666666; --border-color: #eeeeee; --meta-bg: #f8f9fa;
         }
 
-        /* 🌙 Night Mode (Dark Mode වර්ණ) */
         [data-theme="dark"] {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-main: #f1f1f1;
-            --text-muted: #aaaaaa;
-            --border-color: #333333;
-            --meta-bg: #2d2d2d;
+            --bg-color: #121212; --card-bg: #1e1e1e; --text-main: #f1f1f1;
+            --text-muted: #aaaaaa; --border-color: #333333; --meta-bg: #2d2d2d;
             --primary: #2980b9; 
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 15px; transition: background-color 0.3s, color 0.3s; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 15px; transition: 0.3s; }
         .container { max-width: 600px; margin: auto; position: relative; }
-        h1 { text-align: center; color: var(--text-main); font-size: 24px; margin-bottom: 20px; transition: color 0.3s; }
+        h1 { text-align: center; font-size: 24px; margin-bottom: 20px; }
         
-        /* Theme Toggle Button */
-        .theme-btn { position: absolute; top: 0; right: 0; background: var(--card-bg); color: var(--text-main); border: 2px solid var(--border-color); padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .theme-btn:hover { border-color: var(--primary); }
+        .theme-btn { position: absolute; top: 0; right: 0; background: var(--card-bg); color: var(--text-main); border: 2px solid var(--border-color); padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s; }
 
-        .station-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-left: 5px solid var(--primary); transition: background 0.3s; }
+        .station-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-left: 5px solid var(--primary); }
         .dist-tag { display: inline-block; background: rgba(2, 136, 209, 0.1); color: #0288d1; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; margin-top: 10px; border: 1px solid rgba(2, 136, 209, 0.3); }
         
-        .station-info h3 { margin: 0; color: var(--text-main); font-size: 22px; transition: color 0.3s; }
-        .station-info p { margin: 5px 0; color: var(--text-muted); font-size: 15px; transition: color 0.3s; }
-        
-        .status-row { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); transition: border-color 0.3s; }
+        .status-row { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); }
         .fuel-type { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 48%; }
         .status-badge { padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; width: 80px; text-align: center; }
         .available { background-color: var(--success); color: white; }
         .unavailable { background-color: var(--danger); color: white; }
         
-        .btn-group { display: flex; gap: 8px; width: 100%; justify-content: center; }
-        .btn { border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; flex: 1; white-space: nowrap; }
+        .btn-group { display: flex; gap: 8px; width: 100%; }
+        .btn { border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; flex: 1; }
         .btn-yes { background: rgba(46, 204, 113, 0.1); color: var(--success); border: 1px solid var(--success); }
         .btn-no { background: rgba(231, 76, 60, 0.1); color: var(--danger); border: 1px solid var(--danger); }
         
-        .meta-info { margin-top: 20px; font-size: 13px; color: var(--text-muted); text-align: center; background: var(--meta-bg); padding: 10px; border-radius: 8px; transition: background 0.3s, color 0.3s; }
+        .meta-info { margin-top: 20px; font-size: 13px; color: var(--text-muted); text-align: center; background: var(--meta-bg); padding: 10px; border-radius: 8px; }
         #status-msg { text-align: center; color: var(--primary); font-weight: bold; margin-bottom: 15px; }
 
-        /* Responsive Design */
         @media (max-width: 480px) {
             .status-row { flex-direction: column; gap: 20px; }
-            .fuel-type { width: 100%; padding-bottom: 15px; border-bottom: 1px dashed var(--border-color); }
-            .fuel-type:last-child { border-bottom: none; padding-bottom: 0; }
-            .btn { font-size: 15px; padding: 12px 10px; }
+            .fuel-type { width: 100%; border-bottom: 1px dashed var(--border-color); padding-bottom: 15px; }
             .theme-btn { position: relative; display: table; margin: 0 auto 15px auto; } 
         }
     </style>
@@ -86,7 +64,7 @@
 <div class="container">
     <button id="themeToggle" class="theme-btn">🌙 Dark Mode</button>
     <h1>⛽ Fuel Status LK</h1>
-    <div id="status-msg">ස්ථානය සහ දත්ත පරීක්ෂා කරමින්...</div>
+    <div id="status-msg">ස්ථානය පරීක්ෂා කරමින්...</div>
     <div id="stationList"></div>
 </div>
 
@@ -94,33 +72,19 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // ==========================================
     // 🌗 Dark Mode Logic
-    // ==========================================
     const themeBtn = document.getElementById('themeToggle');
-    const savedTheme = localStorage.getItem('theme') || 'light';
-
-    if (savedTheme === 'dark') {
+    themeBtn.addEventListener('click', () => {
+        const isDark = document.documentElement.toggleAttribute('data-theme');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        themeBtn.innerText = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+    });
+    if (localStorage.getItem('theme') === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
         themeBtn.innerText = '☀️ Light Mode';
     }
 
-    themeBtn.addEventListener('click', () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        if (currentTheme === 'dark') {
-            document.documentElement.removeAttribute('data-theme');
-            localStorage.setItem('theme', 'light');
-            themeBtn.innerText = '🌙 Dark Mode';
-        } else {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-            themeBtn.innerText = '☀️ Light Mode';
-        }
-    });
-
-    // ==========================================
     // 🔥 Firebase Setup
-    // ==========================================
     const firebaseConfig = {
         apiKey: "AIzaSyD_m49w7qdX0e-Jt6fZYh91_QAMQOmoWfU",
         authDomain: "fuel-portal-lk.firebaseapp.com",
@@ -129,15 +93,11 @@
         messagingSenderId: "42488896193",
         appId: "1:42488896193:web:dec2dd13504d03b8691240"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    let myStation = null;
-    let userLat = null, userLon = null;
+    let myStation = null, userLat = null, userLon = null;
 
-    // ==========================================
-    // 📍 දුර මැනීම සහ දත්ත සැකසීම
-    // ==========================================
+    // 📍 Distance Helper
     function getDistance(lat1, lon1, lat2, lon2) {
         if (!lat1 || !lon1 || !lat2 || !lon2) return null; 
         const R = 6371; 
@@ -147,183 +107,105 @@
         return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))); 
     }
 
-    function formatTime(timestamp) {
-        if (!timestamp) return "තවම යාවත්කාලීන කර නැත";
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        return date.toLocaleString('si-LK', { dateStyle: 'short', timeStyle: 'short' });
-    }
-
-    function getUserLocation() {
-        return new Promise((resolve) => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => { resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }); },
-                    (err) => { resolve(null); }
-                );
-            } else { resolve(null); }
-        });
-    }
-
-    // ==========================================
-    // 🚀 ප්‍රධාන වැඩසටහන ආරම්භ කිරීම
-    // ==========================================
     async function initApp() {
         try {
             const res = await fetch('fuel_stations_v3_gps.json');
             const data = await res.json();
             myStation = Array.isArray(data) ? data[0] : data; 
 
-            document.getElementById('status-msg').innerText = "ඔබගේ ස්ථානය ලබා ගනිමින්...";
-            
-            const location = await getUserLocation();
-            if (location) {
-                userLat = location.lat;
-                userLon = location.lon;
+            navigator.geolocation.getCurrentPosition(pos => {
+                userLat = pos.coords.latitude; userLon = pos.coords.longitude;
                 document.getElementById('status-msg').innerText = "";
-            } else {
-                document.getElementById('status-msg').innerText = "⚠️ ස්ථානය ලබාගැනීමට නොහැකි විය. දුර පෙන්විය නොහැක.";
-            }
-
-            renderStation();
-
-        } catch (error) {
-            document.getElementById('status-msg').innerText = "දත්ත ලබාගැනීමේ දෝෂයකි!";
-            console.error(error);
-        }
+                renderStation();
+            }, () => {
+                document.getElementById('status-msg').innerText = "⚠️ ස්ථානය ලබාගත නොහැක.";
+                renderStation();
+            });
+        } catch (e) { document.getElementById('status-msg').innerText = "දත්ත දෝෂයකි!"; }
     }
 
-    // ==========================================
-    // 🖥️ UI එක තිරයේ පෙන්වීම
-    // ==========================================
     async function renderStation() {
         const listDiv = document.getElementById('stationList');
-        listDiv.innerHTML = "<p style='text-align:center;'>තෙල් තත්ත්වය පරීක්ෂා කරමින්...</p>";
+        const docRef = doc(db, "fuel_stations", myStation.id);
+        const docSnap = await getDoc(docRef);
+        let fbData = docSnap.exists() ? docSnap.data() : { petrol: false, diesel: false, updateCount: 0 };
 
-        try {
-            const docRef = doc(db, "fuel_stations", myStation.id);
-            const docSnap = await getDoc(docRef);
-            
-            let fbData = { petrol: false, diesel: false, lastUpdated: null, updateCount: 0 };
-            if (docSnap.exists()) {
-                fbData = docSnap.data();
-            }
+        const distance = getDistance(userLat, userLon, myStation.latitude, myStation.longitude);
+        const lastUp = fbData.lastUpdated ? fbData.lastUpdated.toDate().toLocaleString('si-LK') : "තාම නැත";
 
-            const distance = getDistance(userLat, userLon, myStation.latitude, myStation.longitude);
-            const distanceHtml = distance !== null ? `<div class="dist-tag">📍 ඔබගේ සිට දුර: <b>${distance.toFixed(2)} km</b></div>` : '';
-
-            listDiv.innerHTML = `
-                <div class="station-card">
-                    <div class="station-info">
-                        <h3>⛽ ${myStation.name}</h3>
-                        <p>නගරය: ${myStation.location}</p>
-                        ${distanceHtml}
-                    </div>
-                    
-                    <div class="status-row">
-                        <div class="fuel-type">
-                            <span class="status-badge ${fbData.petrol ? 'available' : 'unavailable'}">PETROL</span>
-                            <div class="btn-group">
-                                <button class="btn btn-yes" onclick="updateFuelStatus('${myStation.id}', 'petrol', true)">✔ තියෙනවා</button>
-                                <button class="btn btn-no" onclick="updateFuelStatus('${myStation.id}', 'petrol', false)">✖ නැහැ</button>
-                            </div>
-                        </div>
-                        <div class="fuel-type">
-                            <span class="status-badge ${fbData.diesel ? 'available' : 'unavailable'}">DIESEL</span>
-                            <div class="btn-group">
-                                <button class="btn btn-yes" onclick="updateFuelStatus('${myStation.id}', 'diesel', true)">✔ තියෙනවා</button>
-                                <button class="btn btn-no" onclick="updateFuelStatus('${myStation.id}', 'diesel', false)">✖ නැහැ</button>
-                            </div>
+        listDiv.innerHTML = `
+            <div class="station-card">
+                <h3>⛽ ${myStation.name}</h3>
+                <p>📍 ${myStation.location}</p>
+                ${distance ? `<div class="dist-tag">දුර: ${distance.toFixed(2)} km</div>` : ''}
+                <div class="status-row">
+                    <div class="fuel-type">
+                        <span class="status-badge ${fbData.petrol ? 'available' : 'unavailable'}">PETROL</span>
+                        <div class="btn-group">
+                            <button class="btn btn-yes" onclick="updateFuelStatus('petrol', true)">✔</button>
+                            <button class="btn btn-no" onclick="updateFuelStatus('petrol', false)">✖</button>
                         </div>
                     </div>
-
-                    <div class="meta-info">
-                        <p>🔄 අවසන් යාවත්කාලීනය: <b>${formatTime(fbData.lastUpdated)}</b></p>
-                        <p>👥 පුද්ගලයින් <b>${fbData.updateCount || 0}</b> ක් තහවුරු කර ඇත</p>
+                    <div class="fuel-type">
+                        <span class="status-badge ${fbData.diesel ? 'available' : 'unavailable'}">DIESEL</span>
+                        <div class="btn-group">
+                            <button class="btn btn-yes" onclick="updateFuelStatus('diesel', true)">✔</button>
+                            <button class="btn btn-no" onclick="updateFuelStatus('diesel', false)">✖</button>
+                        </div>
                     </div>
                 </div>
-            `;
-        } catch (e) {
-            console.error("Firebase Error:", e);
-            listDiv.innerHTML = "<p>Firebase සම්බන්ධතා දෝෂයකි!</p>";
+                <div class="meta-info">
+                    <p>🔄 අවසන් යාවත්කාලීනය: <b>${lastUp}</b></p>
+                    <p>👥 පුද්ගලයින් <b>${fbData.updateCount || 0}</b> ක් තහවුරු කර ඇත</p>
+                </div>
+            </div>`;
+    }
+
+    window.updateFuelStatus = async function(type, status) {
+        if(!confirm("තොරතුර තහවුරු කරනවාද?")) return;
+        await setDoc(doc(db, "fuel_stations", myStation.id), { 
+            [type]: status, lastUpdated: serverTimestamp(), updateCount: increment(1) 
+        }, { merge: true });
+        renderStation();
+    };
+
+    // ==========================================
+    // 🔔 ස්වයංක්‍රීය දැනුම්දීමේ පද්ධතිය (9, 12, 15, 18)
+    // ==========================================
+    let lastNotifiedHour = -1;
+    async function checkAndNotify() {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const targetHours = [9, 12, 15, 18];
+
+        if (targetHours.includes(currentHour) && lastNotifiedHour !== currentHour) {
+            const docSnap = await getDoc(doc(db, "fuel_stations", myStation.id));
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const p = data.petrol ? "✅ ඇත" : "✖ නැත";
+                const d = data.diesel ? "✅ ඇත" : "✖ නැත";
+                
+                if (Notification.permission === "granted") {
+                    new Notification(`⛽ ${myStation.name} තත්ත්වය`, {
+                        body: `පෙට්‍රල්: ${p} | ඩීසල්: ${d}\nසජීවීව බැලීමට ක්ලික් කරන්න.`,
+                        icon: "https://cdn-icons-png.flaticon.com/512/3204/3204073.png"
+                    });
+                }
+            }
+            lastNotifiedHour = currentHour;
         }
     }
 
-    // ==========================================
-    // ⛽ තෙල් තත්ත්වය Update කිරීම (සහ Notification යැවීම)
-    // ==========================================
-    window.updateFuelStatus = async function(id, fuelType, status) {
-        if(!confirm("ඔබ මෙම තොරතුර තහවුරු කරනවාද?")) return;
-        
-        document.getElementById('status-msg').innerText = "යාවත්කාලීන කරමින්...";
-        const stationRef = doc(db, "fuel_stations", id);
-        
-        try {
-            // Firebase එකට දත්ත යැවීම
-            await setDoc(stationRef, { 
-                [fuelType]: status, 
-                lastUpdated: serverTimestamp(), 
-                updateCount: increment(1) 
-            }, { merge: true });
-            
-            // 🔔 ක්ෂණික Notification එක යැවීම
-            sendInstantNotification(fuelType, status);
-
-            document.getElementById('status-msg').innerText = "✅ සාර්ථකව යාවත්කාලීන විය!";
-            setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
-            
-            renderStation(); 
-            
-        } catch (e) { 
-            alert("Error: දෝෂයක් හටගත්තා! " + e); 
-            document.getElementById('status-msg').innerText = "";
+    // සයිට් එකට ඇවිත් තත්පර 5කින් වැඩේ ටෙස්ට් කිරීමට:
+    setTimeout(() => {
+        if (Notification.permission === "default") Notification.requestPermission();
+        if (Notification.permission === "granted") {
+            new Notification("Fuel Status LK ⛽", { body: "නොටිෆිකේෂන් පද්ධතිය සක්‍රියයි!" });
         }
-    }
+    }, 5000);
 
-    // ==========================================
-    // 🚀 OneSignal හරහා ක්ෂණික දැනුම්දීම (Real-time Alert)
-    // ==========================================
-    async function sendInstantNotification(fuelType, isAvailable) {
-        const appId = "b36bb97b-1cbc-4fde-89c4-8e5f069ad68d"; 
-        const restApiKey = "os_v2_app_wnv3s6y4xrh55coerzpqngwwrv45ifv5f5nubt4f5jugw6hcmo2j5326excm5d3lnekqwtzxhedqgtiwkit52jkdnn4wcbbn74li6ty"; 
-        
-        const fuelName = fuelType === 'petrol' ? 'පෙට්‍රල් (Petrol)' : 'ඩීසල් (Diesel)';
-        
-        let titleText = "";
-        let messageText = "";
-
-        if (isAvailable) {
-            titleText = `⛽ ${myStation.name} - ${fuelName} තියෙනවා!`;
-            messageText = `දැන් සෙඩ් එකේ ${fuelName} තියෙනවා කියලා පාරිභෝගිකයෙක් තහවුරු කළා.`;
-        } else {
-            titleText = `⚠️ ${myStation.name} - ${fuelName} ඉවරයි!`;
-            messageText = `සෙඩ් එකේ ${fuelName} අවසන් වී ඇති බව පාරිභෝගිකයෙක් දැන් තහවුරු කළා.`;
-        }
-
-        const notificationData = {
-            app_id: appId,
-            included_segments: ["Subscribed Users"], 
-            headings: { "en": titleText },
-            contents: { "en": messageText },
-            url: window.location.href 
-        };
-
-        try {
-            await fetch("https://onesignal.com/api/v1/notifications", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Basic ${restApiKey}`
-                },
-                body: JSON.stringify(notificationData)
-            });
-            console.log("🔔 Notification එක සාර්ථකව යැව්වා!");
-        } catch (error) {
-            console.error("🔔 Notification යැවීමේ දෝෂයක්:", error);
-        }
-    }
-
+    setInterval(checkAndNotify, 60000);
     initApp();
 </script>
-
 </body>
 </html>
