@@ -4,44 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fuel Status LK - සෙඩ් තත්ත්වය</title>
- <style>
-    :root { --primary: #3498db; --success: #2ecc71; --danger: #e74c3c; --dark: #2c3e50; --light: #f4f7f6; }
-    body { font-family: 'Segoe UI', sans-serif; background-color: var(--light); margin: 0; padding: 15px; }
-    .container { max-width: 600px; margin: auto; }
-    h1 { text-align: center; color: var(--dark); font-size: 24px; margin-bottom: 20px; }
-    
-    .station-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-left: 5px solid var(--primary); }
-    .dist-tag { display: inline-block; background: #e1f5fe; color: #0288d1; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; margin-top: 10px; border: 1px solid #81d4fa; }
-    
-    .station-info h3 { margin: 0; color: var(--dark); font-size: 22px; }
-    .station-info p { margin: 5px 0; color: #666; font-size: 15px; }
-    
-    .status-row { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; }
-    .fuel-type { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 48%; }
-    .status-badge { padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; width: 80px; text-align: center; }
-    .available { background-color: var(--success); color: white; }
-    .unavailable { background-color: var(--danger); color: white; }
-    
-    .btn-group { display: flex; gap: 8px; width: 100%; justify-content: center; }
-    .btn { border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; flex: 1; white-space: nowrap; }
-    .btn-yes { background: #e8f5e9; color: var(--success); border: 1px solid var(--success); }
-    .btn-no { background: #ffebee; color: var(--danger); border: 1px solid var(--danger); }
-    
-    .meta-info { margin-top: 20px; font-size: 13px; color: #7f8c8d; text-align: center; background: #f8f9fa; padding: 10px; border-radius: 8px; }
-    #status-msg { text-align: center; color: var(--primary); font-weight: bold; margin-bottom: 15px; }
+    <style>
+        /* ☀️ Day Mode (පෙරනිමි වර්ණ) */
+        :root { 
+            --primary: #3498db; 
+            --success: #2ecc71; 
+            --danger: #e74c3c; 
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #666666;
+            --border-color: #eeeeee;
+            --meta-bg: #f8f9fa;
+        }
 
-    /* ෆෝන් වලට අදාළ Responsive කේතය (අලුතින් එකතු කළ කොටස) */
-    @media (max-width: 480px) {
-        .status-row { flex-direction: column; gap: 20px; }
-        .fuel-type { width: 100%; padding-bottom: 15px; border-bottom: 1px dashed #eee; }
-        .fuel-type:last-child { border-bottom: none; padding-bottom: 0; }
-        .btn { font-size: 15px; padding: 12px 10px; }
-    }
-</style>
+        /* 🌙 Night Mode (Dark Mode වර්ණ) */
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #f1f1f1;
+            --text-muted: #aaaaaa;
+            --border-color: #333333;
+            --meta-bg: #2d2d2d;
+            --primary: #2980b9; /* Dark mode එකට ගැලපෙන නිල් පාට */
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 15px; transition: background-color 0.3s, color 0.3s; }
+        .container { max-width: 600px; margin: auto; position: relative; }
+        h1 { text-align: center; color: var(--text-main); font-size: 24px; margin-bottom: 20px; transition: color 0.3s; }
+        
+        /* 🌗 Theme Toggle Button */
+        .theme-btn { position: absolute; top: 0; right: 0; background: var(--card-bg); color: var(--text-main); border: 2px solid var(--border-color); padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .theme-btn:hover { border-color: var(--primary); }
+
+        .station-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-left: 5px solid var(--primary); transition: background 0.3s; }
+        .dist-tag { display: inline-block; background: rgba(2, 136, 209, 0.1); color: #0288d1; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; margin-top: 10px; border: 1px solid rgba(2, 136, 209, 0.3); }
+        
+        .station-info h3 { margin: 0; color: var(--text-main); font-size: 22px; transition: color 0.3s; }
+        .station-info p { margin: 5px 0; color: var(--text-muted); font-size: 15px; transition: color 0.3s; }
+        
+        .status-row { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); transition: border-color 0.3s; }
+        .fuel-type { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 48%; }
+        .status-badge { padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; width: 80px; text-align: center; }
+        .available { background-color: var(--success); color: white; }
+        .unavailable { background-color: var(--danger); color: white; }
+        
+        .btn-group { display: flex; gap: 8px; width: 100%; justify-content: center; }
+        .btn { border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; flex: 1; white-space: nowrap; }
+        .btn-yes { background: rgba(46, 204, 113, 0.1); color: var(--success); border: 1px solid var(--success); }
+        .btn-no { background: rgba(231, 76, 60, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+        
+        .meta-info { margin-top: 20px; font-size: 13px; color: var(--text-muted); text-align: center; background: var(--meta-bg); padding: 10px; border-radius: 8px; transition: background 0.3s, color 0.3s; }
+        #status-msg { text-align: center; color: var(--primary); font-weight: bold; margin-bottom: 15px; }
+
+        @media (max-width: 480px) {
+            .status-row { flex-direction: column; gap: 20px; }
+            .fuel-type { width: 100%; padding-bottom: 15px; border-bottom: 1px dashed var(--border-color); }
+            .fuel-type:last-child { border-bottom: none; padding-bottom: 0; }
+            .btn { font-size: 15px; padding: 12px 10px; }
+            .theme-btn { position: relative; display: table; margin: 0 auto 15px auto; } /* ෆෝන් එකේදී බොත්තම මැදට ගෙන එයි */
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
+    <button id="themeToggle" class="theme-btn">🌙 Dark Mode</button>
     <h1>⛽ Fuel Status LK</h1>
     <div id="status-msg">ස්ථානය සහ දත්ත පරීක්ෂා කරමින්...</div>
     <div id="stationList"></div>
@@ -50,6 +78,30 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    // 🌗 Theme Toggle Logic
+    const themeBtn = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+
+    // සයිට් එක ලෝඩ් වෙද්දී කලින් සේව් කරපු Theme එක දානවා
+    if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeBtn.innerText = '☀️ Light Mode';
+    }
+
+    // බොත්තම එබුවම Theme එක මාරු කරනවා
+    themeBtn.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        if (currentTheme === 'dark') {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+            themeBtn.innerText = '🌙 Dark Mode';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+            themeBtn.innerText = '☀️ Light Mode';
+        }
+    });
 
     const firebaseConfig = {
         apiKey: "AIzaSyD_m49w7qdX0e-Jt6fZYh91_QAMQOmoWfU",
@@ -65,7 +117,6 @@
     let myStation = null;
     let userLat = null, userLon = null;
 
-    // Haversine දුර ගණනය
     function getDistance(lat1, lon1, lat2, lon2) {
         if (!lat1 || !lon1 || !lat2 || !lon2) return null; 
         const R = 6371; 
@@ -75,14 +126,12 @@
         return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))); 
     }
 
-    // දත්ත Format කිරීම
     function formatTime(timestamp) {
         if (!timestamp) return "තවම යාවත්කාලීන කර නැත";
         const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
         return date.toLocaleString('si-LK', { dateStyle: 'short', timeStyle: 'short' });
     }
 
-    // 1. පාරිභෝගිකයාගේ ස්ථානය ඔටෝම ගැනීම
     function getUserLocation() {
         return new Promise((resolve) => {
             if (navigator.geolocation) {
@@ -94,17 +143,14 @@
         });
     }
 
-    // 2. ප්‍රධාන වැඩසටහන ආරම්භය
     async function initApp() {
         try {
-            // JSON එක ලෝඩ් කිරීම (තනි සෙඩ් එකක් පමණක් ඇතැයි උපකල්පනය කරයි)
             const res = await fetch('fuel_stations_v3_gps.json');
             const data = await res.json();
-            myStation = Array.isArray(data) ? data[0] : data; // අරේ එකක් හෝ ඔබ්ජෙක්ට් එකක් වුවත් ගනී
+            myStation = Array.isArray(data) ? data[0] : data; 
 
             document.getElementById('status-msg').innerText = "ඔබගේ ස්ථානය ලබා ගනිමින්...";
             
-            // ස්ථානය ගැනීම
             const location = await getUserLocation();
             if (location) {
                 userLat = location.lat;
@@ -122,7 +168,6 @@
         }
     }
 
-    // 3. තිරයේ පෙන්වීම
     async function renderStation() {
         const listDiv = document.getElementById('stationList');
         listDiv.innerHTML = "<p style='text-align:center;'>තෙල් තත්ත්වය පරීක්ෂා කරමින්...</p>";
@@ -176,7 +221,6 @@
         }
     }
 
-    // 4. Firebase එකට යාවත්කාලීන කිරීම
     window.updateFuelStatus = async function(id, fuelType, status) {
         if(!confirm("ඔබ මෙම තොරතුර තහවුරු කරනවාද?")) return;
         
@@ -186,14 +230,14 @@
         try {
             await setDoc(stationRef, { 
                 [fuelType]: status, 
-                lastUpdated: serverTimestamp(), // Firebase සර්වර් වෙලාව
-                updateCount: increment(1) // හැම පාරම එකකින් වැඩි වෙනවා
+                lastUpdated: serverTimestamp(), 
+                updateCount: increment(1) 
             }, { merge: true });
             
             document.getElementById('status-msg').innerText = "✅ සාර්ථකව යාවත්කාලීන විය!";
             setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
             
-            renderStation(); // ආපහු අලුත් දත්ත පෙන්වනවා
+            renderStation(); 
             
         } catch (e) { 
             alert("Error: Quota ඉවර වෙලා හෝ අවසර නැත!"); 
@@ -201,7 +245,6 @@
         }
     }
 
-    // වැඩසටහන පටන් ගැනීම
     initApp();
 </script>
 
