@@ -6,15 +6,17 @@
     <title>Fuel Status LK - සෙඩ් තත්ත්වය</title>
     
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "b36bb97b-1cbc-4fde-89c4-8e5f069ad68d",
-    });
-  });
-</script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "b36bb97b-1cbc-4fde-89c4-8e5f069ad68d",
+          notifyButton: {
+            enable: true, // සීනුව අයිකන් එක පෙන්වන්න
+          },
+        });
+      });
+    </script>
 
     <style>
         /* ☀️ Day Mode (පෙරනිමි වර්ණ) */
@@ -92,7 +94,9 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+    // ==========================================
     // 🌗 Dark Mode Logic
+    // ==========================================
     const themeBtn = document.getElementById('themeToggle');
     const savedTheme = localStorage.getItem('theme') || 'light';
 
@@ -114,7 +118,9 @@
         }
     });
 
+    // ==========================================
     // 🔥 Firebase Setup
+    // ==========================================
     const firebaseConfig = {
         apiKey: "AIzaSyD_m49w7qdX0e-Jt6fZYh91_QAMQOmoWfU",
         authDomain: "fuel-portal-lk.firebaseapp.com",
@@ -129,6 +135,9 @@
     let myStation = null;
     let userLat = null, userLon = null;
 
+    // ==========================================
+    // 📍 දුර මැනීම සහ දත්ත සැකසීම
+    // ==========================================
     function getDistance(lat1, lon1, lat2, lon2) {
         if (!lat1 || !lon1 || !lat2 || !lon2) return null; 
         const R = 6371; 
@@ -155,6 +164,9 @@
         });
     }
 
+    // ==========================================
+    // 🚀 ප්‍රධාන වැඩසටහන ආරම්භ කිරීම
+    // ==========================================
     async function initApp() {
         try {
             const res = await fetch('fuel_stations_v3_gps.json');
@@ -180,6 +192,9 @@
         }
     }
 
+    // ==========================================
+    // 🖥️ UI එක තිරයේ පෙන්වීම
+    // ==========================================
     async function renderStation() {
         const listDiv = document.getElementById('stationList');
         listDiv.innerHTML = "<p style='text-align:center;'>තෙල් තත්ත්වය පරීක්ෂා කරමින්...</p>";
@@ -233,6 +248,9 @@
         }
     }
 
+    // ==========================================
+    // ⛽ තෙල් තත්ත්වය Update කිරීම (සහ Notification යැවීම)
+    // ==========================================
     window.updateFuelStatus = async function(id, fuelType, status) {
         if(!confirm("ඔබ මෙම තොරතුර තහවුරු කරනවාද?")) return;
         
@@ -240,20 +258,67 @@
         const stationRef = doc(db, "fuel_stations", id);
         
         try {
+            // Firebase එකට දත්ත යැවීම
             await setDoc(stationRef, { 
                 [fuelType]: status, 
                 lastUpdated: serverTimestamp(), 
                 updateCount: increment(1) 
             }, { merge: true });
             
+            // 🔔 ක්ෂණික Notification එක යැවීම
+            sendInstantNotification(fuelType, status);
+
             document.getElementById('status-msg').innerText = "✅ සාර්ථකව යාවත්කාලීන විය!";
             setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
             
             renderStation(); 
             
         } catch (e) { 
-            alert("Error: Quota ඉවර වෙලා හෝ අවසර නැත!"); 
+            alert("Error: දෝෂයක් හටගත්තා! " + e); 
             document.getElementById('status-msg').innerText = "";
+        }
+    }
+
+    // ==========================================
+    // 🚀 OneSignal හරහා ක්ෂණික දැනුම්දීම (Real-time Alert)
+    // ==========================================
+    async function sendInstantNotification(fuelType, isAvailable) {
+        const appId = "b36bb97b-1cbc-4fde-89c4-8e5f069ad68d"; 
+        const restApiKey = "os_v2_app_wnv3s6y4xrh55coerzpqngwwrv45ifv5f5nubt4f5jugw6hcmo2j5326excm5d3lnekqwtzxhedqgtiwkit52jkdnn4wcbbn74li6ty"; 
+        
+        const fuelName = fuelType === 'petrol' ? 'පෙට්‍රල් (Petrol)' : 'ඩීසල් (Diesel)';
+        
+        let titleText = "";
+        let messageText = "";
+
+        if (isAvailable) {
+            titleText = `⛽ ${myStation.name} - ${fuelName} තියෙනවා!`;
+            messageText = `දැන් සෙඩ් එකේ ${fuelName} තියෙනවා කියලා පාරිභෝගිකයෙක් තහවුරු කළා.`;
+        } else {
+            titleText = `⚠️ ${myStation.name} - ${fuelName} ඉවරයි!`;
+            messageText = `සෙඩ් එකේ ${fuelName} අවසන් වී ඇති බව පාරිභෝගිකයෙක් දැන් තහවුරු කළා.`;
+        }
+
+        const notificationData = {
+            app_id: appId,
+            included_segments: ["Subscribed Users"], 
+            headings: { "en": titleText },
+            contents: { "en": messageText },
+            url: window.location.href 
+        };
+
+        try {
+            await fetch("https://onesignal.com/api/v1/notifications", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Basic ${restApiKey}`
+                },
+                body: JSON.stringify(notificationData)
+            });
+            console.log("🔔 Notification එක සාර්ථකව යැව්වා!");
+        } catch (error) {
+            console.error("🔔 Notification යැවීමේ දෝෂයක්:", error);
         }
     }
 
