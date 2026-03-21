@@ -34,9 +34,12 @@
 
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 15px; transition: 0.3s; }
         .container { max-width: 600px; margin: auto; position: relative; }
-        h1 { text-align: center; font-size: 24px; margin-bottom: 20px; }
         
-        .theme-btn { position: absolute; top: 0; right: 0; background: var(--card-bg); color: var(--text-main); border: 2px solid var(--border-color); padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .visitor-badge { background: var(--card-bg); color: var(--text-main); border: 2px solid var(--border-color); padding: 8px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+        .theme-btn { background: var(--card-bg); color: var(--text-main); border: 2px solid var(--border-color); padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s; }
+
+        h1 { text-align: center; font-size: 24px; margin-top: 0; margin-bottom: 20px; }
 
         .station-card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid var(--border-color); }
         .station-header { padding: 20px; border-bottom: 1px solid var(--border-color); border-left: 5px solid var(--primary); }
@@ -49,22 +52,23 @@
         .current-status h4 { margin: 0 0 15px 0; color: var(--text-muted); text-transform: uppercase; font-size: 13px; letter-spacing: 1px; }
         .status-grid { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 15px; }
         .status-item { background: var(--card-bg); padding: 15px; border-radius: 10px; width: 45%; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-        .status-item-full { width: 100%; }
-        .status-item h5 { margin: 0 0 10px 0; font-size: 16px; }
-        .badge-large { padding: 8px 15px; border-radius: 25px; font-size: 15px; font-weight: bold; display: inline-block; width: 80%; }
+        .status-item h5 { margin: 0 0 10px 0; font-size: 15px; }
+        .badge-large { padding: 8px 15px; border-radius: 25px; font-size: 14px; font-weight: bold; display: inline-block; width: 85%; }
         .badge-yes { background: rgba(46, 204, 113, 0.15); color: var(--success); }
         .badge-no { background: rgba(231, 76, 60, 0.15); color: var(--danger); }
-        .badge-queue { color: white; width: auto; padding: 8px 30px; }
+        .badge-queue { color: white; width: auto; padding: 8px 25px; }
+        
+        .time-tag { display: block; font-size: 11px; color: var(--text-muted); margin-top: 8px; font-weight: bold; }
 
         /* Update Section */
         .update-section { background: var(--update-box); padding: 20px; }
         .update-section h4 { margin: 0 0 15px 0; font-size: 15px; text-align: center; color: var(--primary); }
-        .update-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--meta-bg); padding: 10px 15px; border-radius: 8px; }
+        .update-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: var(--meta-bg); padding: 10px 15px; border-radius: 8px; }
         .update-row:last-child { margin-bottom: 0; }
-        .update-label { font-weight: bold; font-size: 15px; width: 30%; }
+        .update-label { font-weight: bold; font-size: 14px; width: 35%; }
         
-        .btn-group { display: flex; gap: 10px; width: 65%; }
-        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; flex: 1; transition: 0.2s; }
+        .btn-group { display: flex; gap: 8px; width: 65%; }
+        .btn { border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; flex: 1; transition: 0.2s; }
         .btn:active { transform: scale(0.95); }
         .btn-yes { background: var(--success); color: white; box-shadow: 0 2px 5px rgba(46, 204, 113, 0.3); }
         .btn-no { background: var(--danger); color: white; box-shadow: 0 2px 5px rgba(231, 76, 60, 0.3); }
@@ -77,7 +81,6 @@
         #status-msg { text-align: center; color: var(--primary); font-weight: bold; margin-bottom: 15px; min-height: 20px; }
 
         @media (max-width: 480px) {
-            .theme-btn { position: relative; display: table; margin: 0 auto 15px auto; } 
             .update-row { flex-direction: column; gap: 10px; align-items: flex-start; }
             .update-label { width: 100%; text-align: center; }
             .btn-group { width: 100%; }
@@ -88,7 +91,11 @@
 <body>
 
 <div class="container">
-    <button id="themeToggle" class="theme-btn">🌙 Dark Mode</button>
+    <div class="top-bar">
+        <div id="visitorCountBadge" class="visitor-badge">👁️ Visitor: ...</div>
+        <button id="themeToggle" class="theme-btn">🌙 Dark Mode</button>
+    </div>
+
     <h1>⛽ Fuel Status LK</h1>
     <div id="status-msg">ස්ථානය පරීක්ෂා කරමින්...</div>
     <div id="stationList"></div>
@@ -110,7 +117,7 @@
         themeBtn.innerText = '☀️ Light Mode';
     }
 
-    // Firebase
+    // Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyD_m49w7qdX0e-Jt6fZYh91_QAMQOmoWfU",
         authDomain: "fuel-portal-lk.firebaseapp.com",
@@ -132,7 +139,6 @@
         return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))); 
     }
 
-    // Visitor Count Tracker
     async function trackVisitor(stationId) {
         if (!sessionStorage.getItem('visited_' + stationId)) {
             try {
@@ -140,7 +146,7 @@
                     visitorCount: increment(1) 
                 }, { merge: true });
                 sessionStorage.setItem('visited_' + stationId, 'true');
-            } catch(e) { console.log("Visitor tracking failed", e); }
+            } catch(e) {}
         }
     }
 
@@ -150,7 +156,6 @@
             const data = await res.json();
             myStation = Array.isArray(data) ? data[0] : data; 
 
-            // Track visitor when app initializes
             await trackVisitor(myStation.id);
 
             navigator.geolocation.getCurrentPosition(pos => {
@@ -164,20 +169,36 @@
         } catch (e) { document.getElementById('status-msg').innerText = "දත්ත දෝෂයකි!"; }
     }
 
+    function formatTime(timestamp) {
+        return timestamp ? timestamp.toDate().toLocaleString('si-LK') : "තාම නැත";
+    }
+
     async function renderStation() {
         const listDiv = document.getElementById('stationList');
         const docRef = doc(db, "fuel_stations", myStation.id);
         const docSnap = await getDoc(docRef);
-        let fbData = docSnap.exists() ? docSnap.data() : { petrol: false, diesel: false, updateCount: 0, visitorCount: 0, queueStatus: 'දත්ත නැත' };
+        let fbData = docSnap.exists() ? docSnap.data() : { petrol: false, diesel: false, updateCount: 0, visitorCount: 0 };
 
         const distance = getDistance(userLat, userLon, myStation.latitude, myStation.longitude);
-        const lastUp = fbData.lastUpdated ? fbData.lastUpdated.toDate().toLocaleString('si-LK') : "තාම නැත";
+        
+        const petrolTime = formatTime(fbData.petrolUpdated);
+        const dieselTime = formatTime(fbData.dieselUpdated);
+        const pQueueTime = formatTime(fbData.petrolQueueUpdated);
+        const dQueueTime = formatTime(fbData.dieselQueueUpdated);
 
-        // Queue color logic
-        let qColor = '#7f8c8d'; 
-        if(fbData.queueStatus === 'පොඩි') qColor = 'var(--success)';
-        if(fbData.queueStatus === 'සාමාන්‍ය') qColor = 'var(--warning)';
-        if(fbData.queueStatus === 'ලොකු') qColor = 'var(--danger)';
+        document.getElementById('visitorCountBadge').innerHTML = `👁️ Visitor: <b>${fbData.visitorCount || 1}</b>`;
+
+        // Petrol Queue Colors
+        let pQColor = '#7f8c8d'; 
+        if(fbData.petrolQueueStatus === 'පොඩි') pQColor = 'var(--success)';
+        if(fbData.petrolQueueStatus === 'සාමාන්‍ය') pQColor = 'var(--warning)';
+        if(fbData.petrolQueueStatus === 'ලොකු') pQColor = 'var(--danger)';
+
+        // Diesel Queue Colors
+        let dQColor = '#7f8c8d'; 
+        if(fbData.dieselQueueStatus === 'පොඩි') dQColor = 'var(--success)';
+        if(fbData.dieselQueueStatus === 'සාමාන්‍ය') dQColor = 'var(--warning)';
+        if(fbData.dieselQueueStatus === 'ලොකු') dQColor = 'var(--danger)';
 
         listDiv.innerHTML = `
             <div class="station-card">
@@ -195,18 +216,31 @@
                             <span class="badge-large ${fbData.petrol ? 'badge-yes' : 'badge-no'}">
                                 ${fbData.petrol ? '✅ ඇත' : '❌ නැත'}
                             </span>
+                            <span class="time-tag">⏱️ ${petrolTime}</span>
                         </div>
+                        
                         <div class="status-item">
                             <h5>DIESEL</h5>
                             <span class="badge-large ${fbData.diesel ? 'badge-yes' : 'badge-no'}">
                                 ${fbData.diesel ? '✅ ඇත' : '❌ නැත'}
                             </span>
+                            <span class="time-tag">⏱️ ${dieselTime}</span>
                         </div>
-                        <div class="status-item status-item-full">
-                            <h5>පෝලිමේ තත්ත්වය</h5>
-                            <span class="badge-large badge-queue" style="background-color: ${qColor};">
-                                ${fbData.queueStatus || 'දත්ත නැත'}
+
+                        <div class="status-item">
+                            <h5>පෙට්‍රල් පෝලිම</h5>
+                            <span class="badge-large badge-queue" style="background-color: ${pQColor};">
+                                ${fbData.petrolQueueStatus || 'දත්ත නැත'}
                             </span>
+                            <span class="time-tag">⏱️ ${pQueueTime}</span>
+                        </div>
+
+                        <div class="status-item">
+                            <h5>ඩීසල් පෝලිම</h5>
+                            <span class="badge-large badge-queue" style="background-color: ${dQColor};">
+                                ${fbData.dieselQueueStatus || 'දත්ත නැත'}
+                            </span>
+                            <span class="time-tag">⏱️ ${dQueueTime}</span>
                         </div>
                     </div>
                 </div>
@@ -231,31 +265,40 @@
                     </div>
 
                     <div class="update-row">
-                        <div class="update-label">පෝලිම:</div>
+                        <div class="update-label">පෙට්‍රල් පෝලිම:</div>
                         <div class="btn-group">
-                            <button class="btn btn-q-small" onclick="updateQueue('පොඩි')">පොඩි</button>
-                            <button class="btn btn-q-normal" onclick="updateQueue('සාමාන්‍ය')">සාමාන්‍ය</button>
-                            <button class="btn btn-q-large" onclick="updateQueue('ලොකු')">ලොකු</button>
+                            <button class="btn btn-q-small" onclick="updateQueue('petrolQueue', 'පොඩි')">පොඩි</button>
+                            <button class="btn btn-q-normal" onclick="updateQueue('petrolQueue', 'සාමාන්‍ය')">සාමාන්‍ය</button>
+                            <button class="btn btn-q-large" onclick="updateQueue('petrolQueue', 'ලොකු')">ලොකු</button>
+                        </div>
+                    </div>
+
+                    <div class="update-row">
+                        <div class="update-label">ඩීසල් පෝලිම:</div>
+                        <div class="btn-group">
+                            <button class="btn btn-q-small" onclick="updateQueue('dieselQueue', 'පොඩි')">පොඩි</button>
+                            <button class="btn btn-q-normal" onclick="updateQueue('dieselQueue', 'සාමාන්‍ය')">සාමාන්‍ය</button>
+                            <button class="btn btn-q-large" onclick="updateQueue('dieselQueue', 'ලොකු')">ලොකු</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="meta-info">
-                    <p>🔄 අවසන් යාවත්කාලීනය: <b>${lastUp}</b> <br>
-                    👥 පුද්ගලයින් <b>${fbData.updateCount || 0}</b> ක් තහවුරු කර ඇත <br>
-                    👁️ වෙබ් අඩවියට පැමිණි ගණන: <b>${fbData.visitorCount || 1}</b></p>
+                    <p>👥 පුද්ගලයින් <b>${fbData.updateCount || 0}</b> ක් තහවුරු කර ඇත</p>
                 </div>
             </div>`;
     }
 
-    // Fuel Update Function
+    // Fuel Status Update
     window.updateFuelStatus = async function(type, status) {
         if(!confirm("ඔබ මෙම තොරතුර තහවුරු කරනවාද?")) return;
         document.getElementById('status-msg').innerText = "යාවත්කාලීන කරමින්...";
         
         try {
             await setDoc(doc(db, "fuel_stations", myStation.id), { 
-                [type]: status, lastUpdated: serverTimestamp(), updateCount: increment(1) 
+                [type]: status, 
+                [type + 'Updated']: serverTimestamp(), 
+                updateCount: increment(1) 
             }, { merge: true });
             
             document.getElementById('status-msg').innerText = "✅ සාර්ථකව යාවත්කාලීන විය!";
@@ -266,14 +309,18 @@
         }
     };
 
-    // Queue Update Function
-    window.updateQueue = async function(qStatus) {
-        if(!confirm(`පෝලිමේ තත්ත්වය '${qStatus}' ලෙස යාවත්කාලීන කරනවාද?`)) return;
+    // Queue Update (වෙනස් කරන ලදී)
+    window.updateQueue = async function(queueType, qStatus) {
+        let typeName = queueType === 'petrolQueue' ? 'පෙට්‍රල්' : 'ඩීසල්';
+        if(!confirm(`${typeName} පෝලිමේ තත්ත්වය '${qStatus}' ලෙස යාවත්කාලීන කරනවාද?`)) return;
+        
         document.getElementById('status-msg').innerText = "යාවත්කාලීන කරමින්...";
         
         try {
             await setDoc(doc(db, "fuel_stations", myStation.id), { 
-                queueStatus: qStatus, lastUpdated: serverTimestamp(), updateCount: increment(1) 
+                [queueType + 'Status']: qStatus, 
+                [queueType + 'Updated']: serverTimestamp(), 
+                updateCount: increment(1) 
             }, { merge: true });
             
             document.getElementById('status-msg').innerText = "✅ සාර්ථකව යාවත්කාලීන විය!";
@@ -284,7 +331,6 @@
         }
     };
 
-    // 🔔 Notification System
     let lastNotifiedHour = -1;
     async function checkAndNotify() {
         const now = new Date();
@@ -297,11 +343,10 @@
                 const data = docSnap.data();
                 const p = data.petrol ? "✅ ඇත" : "✖ නැත";
                 const d = data.diesel ? "✅ ඇත" : "✖ නැත";
-                const q = data.queueStatus || "දත්ත නැත";
                 
                 if (Notification.permission === "granted") {
                     new Notification(`⛽ ${myStation.name} තත්ත්වය`, {
-                        body: `පෙට්‍රල්: ${p} | ඩීසල්: ${d} | පෝලිම: ${q}\nසජීවීව බැලීමට ක්ලික් කරන්න.`,
+                        body: `පෙට්‍රල්: ${p} | ඩීසල්: ${d}\nසජීවීව බැලීමට ක්ලික් කරන්න.`,
                         icon: "https://cdn-icons-png.flaticon.com/512/3204/3204073.png"
                     });
                 }
@@ -312,9 +357,6 @@
 
     setTimeout(() => {
         if (Notification.permission === "default") Notification.requestPermission();
-        if (Notification.permission === "granted") {
-            new Notification("Fuel Status LK ⛽", { body: "නොටිෆිකේෂන් පද්ධතිය සක්‍රියයි!" });
-        }
     }, 5000);
 
     setInterval(checkAndNotify, 60000);
